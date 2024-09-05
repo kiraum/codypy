@@ -6,8 +6,9 @@ These classes are representing Cody agent response objects or other
 configuration items.
 """
 
+import logging
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timezone
 from enum import Enum
 from typing import Any, Dict, List, Literal, Union
 
@@ -390,10 +391,18 @@ class PlainMessage(BaseModel):
     :param text: String, contains the answer or the question
     :param speaker: String, could be either "human" or "assistant".
                     Signals which end sent the text.
+    :param error: (optional) Dict, contains error details if the message is an error message.
     """
 
-    text: str
+    text: str | None = None
     speaker: Literal["human", "assistant"]
+    error: Dict[str, Any] | None = None
+
+    @validator("text", pre=True, always=True)
+    def validate_text(cls, value):
+        if value is None:
+            return ""
+        return value
 
 
 class Message(PlainMessage):
@@ -437,15 +446,19 @@ class Transcript(BaseModel):
             return value
         if isinstance(value, str):
             # Parse the string using the appropriate format
-            return datetime.strptime(value, "%a, %d %b %Y %H:%M:%S GMT").astimezone(UTC)
+            return datetime.strptime(value, "%a, %d %b %Y %H:%M:%S GMT").astimezone(
+                timezone.utc
+            )
         raise ValidationError("chatID field must be a parseable datetime string")
 
     @validator("messages", pre=True, each_item=True)
     @classmethod
     def check_message_text(cls, value: dict) -> dict:
-        """Ensure each message has a text field"""
-        if "text" not in value:
-            raise ValidationError("Each message must have a text field")
+        """Ensure each message has a text field or an error field"""
+        if "text" not in value and "error" not in value:
+            raise ValueError(
+                f"Each message must have a text or error field. Error in message: {value}"
+            )
         return value
 
     @property
