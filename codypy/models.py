@@ -9,7 +9,7 @@ configuration items.
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import Enum
-from typing import Any, Dict, Literal, Union
+from typing import Any, Dict, List, Literal, Union
 
 from pydantic import AliasChoices, BaseModel, Field, ValidationError, validator
 
@@ -414,7 +414,7 @@ class Transcript(BaseModel):
     """Chat Transcript model
 
     :param type_name: String, it should be always "transcript"
-    :param messages: List of Messga objects
+    :param messages: List of Message objects
     :param isMessageInProgress: Bool, signals if the message is complete.
                                 This should most of the time be False as
                                 we instantiate the object at the end of
@@ -425,7 +425,7 @@ class Transcript(BaseModel):
     type_name: Literal["transcript"] = Field(
         validation_alias=AliasChoices("type_name", "type")
     )
-    messages: list[Message]
+    messages: List[Message]
     isMessageInProgress: bool
     chatID: datetime
 
@@ -438,7 +438,15 @@ class Transcript(BaseModel):
         if isinstance(value, str):
             # Parse the string using the appropriate format
             return datetime.strptime(value, "%a, %d %b %Y %H:%M:%S GMT").astimezone(UTC)
-        return ValidationError("chatID field must be a parseable datetime string")
+        raise ValidationError("chatID field must be a parseable datetime string")
+
+    @validator("messages", pre=True, each_item=True)
+    @classmethod
+    def check_message_text(cls, value: dict) -> dict:
+        """Ensure each message has a text field"""
+        if "text" not in value:
+            raise ValidationError("Each message must have a text field")
+        return value
 
     @property
     def question(self) -> str:
