@@ -130,7 +130,8 @@ class Models(Enum):
     )
     GPT4TurboPreview = ModelSpec(
         model_name="GPT-4 Turbo",
-        model_id="openai/gpt-4-turbo",
+        # model_id="openai/gpt-4-turbo",
+        model_id="openai::unknown::gpt-4o",
     )
     Mixtral8x7b = ModelSpec(
         model_name="Mixtral 8x7b",

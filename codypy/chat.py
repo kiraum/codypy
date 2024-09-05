@@ -55,7 +55,6 @@ class Chat:
                 "contextFiles": context_files,
             },
         }
-        print(message)
         result = await self.agent.rpc("chat/submitMessage", chat_req)
         return Transcript(**result)
 
