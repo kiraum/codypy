@@ -85,7 +85,7 @@ class Chat:
         }
         await self.agent.rpc("webview/receiveMessage", command)
 
-    async def set_model(self, model: Models = Models.Claude3Sonnet) -> Any:
+    async def set_model(self, model: Models = Models.Claude35Sonnet) -> Any:
         """
         Sets the model to be used for the chat session.
 

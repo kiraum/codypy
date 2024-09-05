@@ -121,6 +121,10 @@ class Models(Enum):
         model_name="Claude 3 Sonnet",
         model_id="anthropic/claude-3-sonnet-20240229",
     )
+    Claude35Sonnet = ModelSpec(
+        model_name="Claude 3.5 Sonnet",
+        model_id="anthropic::2023-06-01::claude-3.5-sonnet",
+    )
     Claude3Opus = ModelSpec(
         model_name="Claude 3 Opus",
         model_id="anthropic/claude-3-opus-20240229",
@@ -144,6 +148,10 @@ class Models(Enum):
     Mixtral8x22b = ModelSpec(
         model_name="Mixtral 8x22b Preview",
         model_id="fireworks/accounts/fireworks/models/mixtral-8x22b-instruct-preview",
+    )
+    StarCoder = ModelSpec(
+        model_name="Star Coder",
+        model_id="fireworks::v1::starcoder",
     )
 
 
@@ -178,6 +186,31 @@ class AuthStatus(BaseModel):
     avatarURL: str
     configOverwrites: CodyLLMSiteConfiguration | None = None
 
+    # Add these fields to make them optional with default values
+    id: str | None = None
+    hasVerifiedEmailDomain: bool = False
+    needsVerifiedEmail: bool = False
+    needsVerifiedEmailDomain: bool = False
+    siteID: str = ""
+    siteName: str = ""
+    siteProductSubscription: Dict[str, Any] = {}
+    codyLLMConfiguration: Dict[str, Any] = {}
+    codyProEnabled: bool = False
+    isCodyEnabled: bool = False
+    isOrgMember: bool = False
+    allowUserSettings: bool = False
+    experimentalFeatures: Dict[str, Any] = {}
+    ageOfAccountInDays: int = 0
+    ageOfVerifiedEmailInDays: int = 0
+    codeIntelRanking: str = ""
+    searchContexts: List[Dict[str, Any]] = []
+    debugEnable: bool = False
+    debugVerboseEnable: bool = False
+    sentryEnvironment: str = ""
+    sentryTracesSampleRate: float = 0.0
+    sentryDSN: str = ""
+    sentryDebugEnable: bool = False
+    sentryTracingEnabled: bool = False
 
 class CodyAgentSpecs(BaseModel):
     """Model for the initialized Cody Agent specification"""
@@ -186,7 +219,13 @@ class CodyAgentSpecs(BaseModel):
     authenticated: bool | None = None
     codyEnabled: bool | None = None
     codyVersion: str | None = None
-    authStatus: AuthStatus | None = None
+    authStatus: AuthStatus
+
+    @validator("authStatus", pre=True, always=True)
+    def validate_auth_status(cls, value):
+        if not value:
+            raise ValueError("authStatus field is required")
+        return value
 
 
 class Position(BaseModel):
